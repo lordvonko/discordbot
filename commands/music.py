@@ -93,6 +93,7 @@ class Music(commands.Cog):
             'quiet': True,
             'no_warnings': True,
             'skip_download': True,
+            'cookiefile': 'cookies.txt',
         }
         try:
             print(f"Cache miss. Searching online for: {query}")
