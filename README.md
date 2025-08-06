@@ -65,10 +65,6 @@ The fun extras that tie it all together.
 All commands are slash-based for that modern Discord feel. Customize permissions in your server settings for ultimate control. 🚀
   
 </details>
-
-**Feature Completion Level**:  
-![95%](https://progress-bar.dev/95?title=Octave+Awesomeness&color=00ff00)
-
 ---
 
 ## 📚 Installation & Setup – Easy as 1-2-3
@@ -140,10 +136,6 @@ Got queries? We've got relaxed replies.
 
 - **Q: Can I run this on Heroku or other hosts?**  
   A: Absolutely, but VPS is recommended for stability. Adapt the setup as needed. ☁️
-
-<div align="center">
-  <img src="https://media.giphy.com/media/l0MYt5jWEU0nUJ496/giphy.gif" alt="FAQ Fun GIF" width="300"/>
-</div>
 
 ---
 
