@@ -11,7 +11,7 @@
   <em>Dive in – we've got beats, bans, and beyond waiting for you! 🎧</em>
 </div>
 
-# Don't want to host? [![My BOT](https://discord.com/oauth2/authorize?client_id=1392570482502668410&permissions=8&integration_type=0&scope=bot+applications.commands)]
+# Don't want to host? [My BOT](https://discord.com/oauth2/authorize?client_id=1392570482502668410&permissions=8&integration_type=0&scope=bot+applications.commands)
 ---
 
 ## 🌈 Why Octave by Punk? Because Your Server Deserves the Best
