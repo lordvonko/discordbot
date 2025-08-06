@@ -20,11 +20,6 @@ Tired of juggling multiple bots? Octave is your all-in-one jam: queue up tunes, 
 - **Moderation Mastery**: Keep things civil with powerful tools. 🛡️
 - **Extra Sparkle**: Utilities that make server life a breeze. ✨
 
-<div align="center">
-  <img src="https://media.giphy.com/media/3o7TKUM3IgfpL2YEog/giphy.gif" alt="Music Vibes GIF" width="300"/>
-  <p><em>Octave dropping the beat like...</em></p>
-</div>
-
 ---
 
 ## 🛠️ Features That'll Make You Groove and not pay for Spotify again...
