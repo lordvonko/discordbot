@@ -5,6 +5,9 @@ import os
 import asyncio
 import sys
 import traceback
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --- Bot Configuration ---
 
