@@ -142,7 +142,7 @@ Got queries? We've got relaxed replies.
 ---
 
 ## 📝 License
-Octave is under the MIT License – free to use, modify, and share. Just give credit where it's due! ⭐
+Octave by Punk is under the MIT License – free to use, modify, and share. Just give credit where it's due! ⭐
 
 <div align="center">
   <p>Made with ❤️ by LORD Vonko (and my love of Daft Punk). Thanks for vibing with us and READING this entire README!</p>
