@@ -32,7 +32,7 @@ Queue up, skip, pause – we've got your playlist covered!
 
 | Command | Description | Example Usage |
 |---------|-------------|---------------|
-| **/play** | Plays a song or adds it to the queue (YouTube/Spotify URLs supported). | `/play https://youtu.be/dQw4w9WgXcQ or music name` |
+| **/play** | Plays a song or adds it to the queue (YouTube/Spotify URLs supported). | `/play {url} or music name` |
 | **/stop** | Stops the music and clears the queue. | `/stop` |
 | **/skip** | Skips to the next song. | `/skip` |
 | **/pause** | Pauses the current track. | `/pause` |
