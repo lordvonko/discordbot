@@ -12,7 +12,7 @@
 </div>
 
 # Don't want to host? Just invite Octave by Punk 
-# [Click here to invite](https://discord.com/oauth2/authorize?client_id=1392570482502668410&permissions=8&integration_type=0&scope=bot+applications.commands)
+# [Click here to invite](https://discord.com/oauth2/authorize?client_id=1392570482502668410)
 ---
 
 ## 🌈 Why Octave by Punk? Because Your Server Deserves the Best
