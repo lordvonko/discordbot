@@ -1,4 +1,4 @@
-# 🚀 Octave by Punk
+# 🚀 Musashi BOT
 
 <div align="center">
   <h3>Turn up the volume and keep your server in tune! 🎶🔨</h3>
@@ -11,11 +11,11 @@
   <em>Dive in – we've got beats, bans, and beyond waiting for you! 🎧</em>
 </div>
 
-# Don't want to host? Just invite Octave by Punk 
+# Don't want to host? Just invite Musashi 
 # [Click here to invite](https://discord.com/oauth2/authorize?client_id=1392570482502668410)
 ---
 
-## 🌈 Why Octave by Punk? Because Your Server Deserves the Best
+## 🌈 Why Musashi? Because Your Server Deserves the Best
 Tired of juggling multiple bots? Octave is your all-in-one jam: queue up tunes, kick out trolls, and sprinkle some fun – all in a sleek, easy-to-use package. 
 
 - **Music Magic**: Stream from YouTube or Spotify without breaking a sweat. 🎵
@@ -142,10 +142,10 @@ Got queries? We've got relaxed replies.
 ---
 
 ## 📝 License
-Octave by Punk is under the MIT License – free to use, modify, and share. Just give credit where it's due! ⭐
+Musashi is under the MIT License – free to use, modify, and share. Just give credit where it's due! ⭐
 
 <div align="center">
-  <p>Made with ❤️ by LORD Vonko (and my love of Daft Punk). Thanks for vibing with us and READING this entire README!</p>
+  <p>Made with ❤️ by LORD Vonko. Thanks for vibing with us and READING this entire README!</p>
 
 --- 
 
