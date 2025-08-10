@@ -16,7 +16,7 @@
 ---
 
 ## 🌈 Why Musashi? Because Your Server Deserves the Best
-Tired of juggling multiple bots? Octave is your all-in-one jam: queue up tunes, kick out trolls, and sprinkle some fun – all in a sleek, easy-to-use package. 
+Tired of juggling multiple bots? Musashi is your all-in-one jam: queue up tunes, kick out trolls, and sprinkle some fun – all in a sleek, easy-to-use package. 
 
 - **Music Magic**: Stream from YouTube or Spotify without breaking a sweat. 🎵
 - **Moderation Mastery**: Keep things civil with powerful tools. 🛡️
@@ -25,7 +25,7 @@ Tired of juggling multiple bots? Octave is your all-in-one jam: queue up tunes, 
 ---
 
 ## 🛠️ Features That'll Make You Groove and not pay for Spotify again...
-Octave packs a punch with commands for every mood. Here's the lineup, served up in handy tables for quick scanning:
+Musashi packs a punch with commands for every mood. Here's the lineup, served up in handy tables for quick scanning:
 
 ### 🎶 Music Commands
 Queue up, skip, pause – we've got your playlist covered!
@@ -70,7 +70,7 @@ All commands are slash-based for that modern Discord feel. Customize permissions
 ---
 
 ## 📚 Installation & Setup – Easy as 1-2-3
-Hosting Octave on your VPS? No sweat! Follow these chill steps, and you'll be online in minutes.
+Hosting Musashi on your VPS? No sweat! Follow these chill steps, and you'll be online in minutes.
 
 ### Prerequisites
 - [Python 3.8+](https://www.python.org/downloads/) 🐍
@@ -107,7 +107,7 @@ Hosting Octave on your VPS? No sweat! Follow these chill steps, and you'll be on
    ```bash
    python main.py
    ```
-   Watch Octave come alive in your console. 🎉
+   Watch Musashi come alive in your console. 🎉
 
 <div align="center">
   <p><strong>Troubleshooting?</strong> Check the console logs or hit up our issues page. We're here to help! 🛠️</p>
@@ -116,7 +116,7 @@ Hosting Octave on your VPS? No sweat! Follow these chill steps, and you'll be on
 ---
 
 ## 🤝 Contributions – Let's Build Together!
-Love Octave? Want to make it even better? Contributions are super welcome! Whether it's bug fixes, new features, or just ideas – jump in.
+Love Musashi? Want to make it even better? Contributions are super welcome! Whether it's bug fixes, new features, or just ideas – jump in.
 
 <details>
 <summary>Contributor Shoutouts 🏆</summary>
@@ -130,7 +130,7 @@ Love Octave? Want to make it even better? Contributions are super welcome! Wheth
 ## ❓ FAQ – Quick Answers to Common Questions
 Got queries? We've got relaxed replies.
 
-- **Q: Does Octave support playlists?**  
+- **Q: Does Musashi support playlists?**  
   A: Yep! Just drop a Spotify or YouTube playlist URL in `/play`. 📜
 
 - **Q: How do I get my Discord token?**  
