@@ -72,6 +72,46 @@ All commands are slash-based for that modern Discord feel. Customize permissions
 ## 📚 Installation & Setup – Easy as 1-2-3
 Hosting Musashi on your VPS? No sweat! Follow these chill steps, and you'll be online in minutes.
 
+Choose your deployment method:
+
+## 🐳 Docker Deployment (Recommended)
+The easiest and most reliable way to run Musashi!
+
+### Prerequisites
+- [Docker](https://docs.docker.com/get-docker/) 🐳
+- [Docker Compose](https://docs.docker.com/compose/install/) 📦
+- [Git](https://git-scm.com/downloads) 📦
+
+### Quick Docker Setup
+1. **Clone the Repo**:
+   ```bash
+   git clone https://github.com/lordvonko/discordbot
+   cd discordbot
+   ```
+
+2. **Configure Environment**:
+   ```bash
+   cp .env.example .env
+   nano .env  # Add your tokens
+   ```
+
+3. **Launch with Docker Compose**:
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Check Status**:
+   ```bash
+   docker-compose logs -f discordbot
+   ```
+
+**That's it! 🎉 Musashi is now running in a secure container with automatic restarts.**
+
+---
+
+## 🐍 Manual Python Setup
+For those who prefer the traditional approach.
+
 ### Prerequisites
 - [Python 3.8+](https://www.python.org/downloads/) 🐍
 - [Git](https://git-scm.com/downloads) 📦
@@ -109,8 +149,49 @@ Hosting Musashi on your VPS? No sweat! Follow these chill steps, and you'll be o
    ```
    Watch Musashi come alive in your console. 🎉
 
+---
+
+## 🔧 Docker Management Commands
+Useful commands for managing your Dockerized Musashi:
+
+```bash
+# View logs
+docker-compose logs -f discordbot
+
+# Restart the bot
+docker-compose restart discordbot
+
+# Stop the bot
+docker-compose down
+
+# Update and restart (after git pull)
+docker-compose build --no-cache
+docker-compose up -d
+
+# Check container status
+docker-compose ps
+
+# Access container shell (for debugging)
+docker-compose exec discordbot /bin/bash
+```
+
+---
+
+## 🛠️ Troubleshooting
+Having issues? Here are common solutions:
+
+### Docker Issues:
+- **Bot won't start**: Check `docker-compose logs discordbot` for errors
+- **Permission denied**: Ensure `.env` file has correct permissions
+- **Build fails**: Run `docker system prune` and rebuild
+
+### General Issues:
+- **Invalid token**: Double-check your `DISCORD_TOKEN` in `.env`
+- **Music not working**: Ensure FFmpeg is installed (automatic in Docker)
+- **Commands not showing**: Use `/sync` command (bot owner only)
+
 <div align="center">
-  <p><strong>Troubleshooting?</strong> Check the console logs or hit up our issues page. We're here to help! 🛠️</p>
+  <p><strong>Still stuck?</strong> Check our issues page or create a new one – we're here to help! 🛠️</p>
 </div>
 
 ---
@@ -137,7 +218,10 @@ Got queries? We've got relaxed replies.
   A: Head to the [Discord Developer Portal](https://discord.com/developers/applications), create an app, and grab the bot token. Easy peasy! 🔑
 
 - **Q: Can I run this on Heroku or other hosts?**  
-  A: Absolutely, but VPS is recommended for stability. Adapt the setup as needed. ☁️
+  A: Absolutely, but VPS is recommended for stability. Docker deployment works great on most platforms! ☁️
+
+- **Q: Should I use Docker or Python directly?**  
+  A: Docker is recommended! It's easier to set up, more secure, and handles dependencies automatically. 🐳
 
 ---
 

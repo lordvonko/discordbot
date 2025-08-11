@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  discordbot:
+    build: .
+    image: discordbot:latest
+    container_name: musashi
+    restart: always  # Auto-restart on failure
+    volumes:
+      - ./.env:/app/.env:ro  # Mount .env securely as read-only
+    user: "1000:1000"  # Run as non-root (match appuser UID/GID)
+    healthcheck:
+      test: ["CMD", "python", "-c", "import discord; print('OK')"]  # Basic check for Python/discord.py availability
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

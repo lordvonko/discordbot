@@ -76,3 +76,8 @@ cookies.txt
 # Discord bot temporary files
 *.tmp
 *.temp
+
+# Docker specific files
+.dockerignore
+docker-compose.override.yml
+.docker/
