@@ -37,6 +37,9 @@ class Music(commands.Cog):
         # Cache for search results: {query: {'data': song_info, 'timestamp': float}}
         self.search_cache = {}
         self.CACHE_TTL = 3600  # 1 hour in seconds
+        # Inactivity tracking
+        self.last_activity = {}  # {guild_id: timestamp}
+        self.INACTIVITY_TIMEOUT = 600  # 10 minutes of inactivity before auto-disconnect
     
     def cog_unload(self):
         """Clean up resources when the cog is unloaded."""
@@ -66,11 +69,9 @@ class Music(commands.Cog):
 
         if not queue:
             self.current_songs.pop(guild_id, None)
-            if interaction.guild.voice_client:
-                try:
-                    await interaction.guild.voice_client.disconnect()
-                except Exception as e:
-                    print(f"Error disconnecting voice client: {e}")
+            # Update last activity timestamp
+            self.last_activity[guild_id] = time.time()
+            print(f"Queue empty for guild {guild_id}, waiting for more songs...")
             return
 
         # Check if voice client is still valid
@@ -82,20 +83,19 @@ class Music(commands.Cog):
 
         song_info = queue.popleft()
         self.current_songs[guild_id] = song_info
+        print(f"Attempting to play: {song_info['title']} - URL: {song_info['url'][:50]}...")
 
         ffmpeg_options = {
-            'before_options': (
-                '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 '
-                '-reconnect_at_eof 1 -reconnect_on_network_error 1 '
-                '-reconnect_on_http_error 4xx,5xx -http_persistent 1 '
-                '-multiple_requests 1 -seekable 0'
-            ),
-            'options': '-vn -b:a 128k -bufsize 1M -maxrate 128k -avoid_negative_ts make_zero'
+            'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+            'options': '-vn'
         }
         try:
+            print(f"Creating FFmpeg audio source with options: {ffmpeg_options}")
             source = discord.FFmpegOpusAudio(song_info['url'], **ffmpeg_options)
+            print(f"✅ Audio source created successfully for {song_info['title']}")
         except Exception as e:
-            print(f"Error creating audio source: {e}")
+            print(f"❌ Error creating audio source for {song_info['title']}: {e}")
+            print(f"URL that failed: {song_info['url']}")
             # Try next song if current one fails
             await self.play_next_song(interaction)
             return
@@ -103,14 +103,26 @@ class Music(commands.Cog):
         def after_playing(error):
             if error:
                 print(f'Player error: {error}')
+                # Try to play next song even on error
+                try:
+                    coro = self.play_next_song(interaction)
+                    future = asyncio.run_coroutine_threadsafe(coro, self.bot.loop)
+                    future.result(timeout=30)
+                except Exception as e:
+                    print(f"Error in after_playing callback with error: {e}")
+                return
+            
+            # Normal completion - play next song
             try:
                 coro = self.play_next_song(interaction)
                 future = asyncio.run_coroutine_threadsafe(coro, self.bot.loop)
-                future.result(timeout=60)  # Add timeout to prevent hanging
+                future.result(timeout=30)
             except Exception as e:
                 print(f"Error in after_playing callback: {e}")
         
+        print(f"Starting playback for {song_info['title']}...")
         interaction.guild.voice_client.play(source, after=after_playing)
+        print(f"Playback started for {song_info['title']}")
 
     # --- Music Search and Extraction ---
 
@@ -184,6 +196,7 @@ class Music(commands.Cog):
                     'duration': video_info.get('duration', 0),
                     'uploader': video_info.get('uploader', 'Unknown')
                 }
+                print(f"Successfully extracted: {song_data['title']} - URL: {song_data['url'][:50]}...")
                 
                 # Store in cache
                 self.search_cache[query] = {'data': song_data, 'timestamp': time.time()}
@@ -248,21 +261,32 @@ class Music(commands.Cog):
             if not tracks:
                 return await interaction.followup.send("Could not retrieve tracks from Spotify.")
 
+            added_count = 0
             for track_query in tracks:
                 song = await self.search_music(track_query)
                 if song:
                     queue.append(song)
+                    added_count += 1
             
-            await interaction.followup.send(f"Added {len(tracks)} songs from the Spotify link to the queue.")
+            if added_count > 0:
+                # Update activity timestamp
+                self.last_activity[str(interaction.guild.id)] = time.time()
+                await interaction.followup.send(f"✅ Added {added_count} songs from the Spotify link to the queue.")
+            else:
+                return await interaction.followup.send("❌ Could not find any songs from the Spotify link. Please try again.")
         else:
             song = await self.search_music(query)
             if not song:
-                return await interaction.followup.send("Could not find a song with that name.")
+                # Don't disconnect on search failure - stay connected and inform user
+                return await interaction.followup.send("❌ Could not find a song with that name. Please try a different search term or check your spelling.")
             
             queue.append(song)
-            await interaction.followup.send(f"Added **{song['title']}** to the queue.")
+            # Update activity timestamp
+            self.last_activity[str(interaction.guild.id)] = time.time()
+            await interaction.followup.send(f"✅ Added **{song['title']}** to the queue.")
 
-        if not voice_client.is_playing():
+        # Only try to play if we have songs in queue and not already playing
+        if queue and not voice_client.is_playing():
             await self.play_next_song(interaction)
 
     @app_commands.command(name="stop", description="Stops the music and clears the queue.")
@@ -324,6 +348,20 @@ class Music(commands.Cog):
                 embed.set_footer(text=f"And {len(queue) - 10} more...")
 
         await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(name="leave", description="Disconnects the bot from the voice channel.")
+    async def leave(self, interaction: discord.Interaction):
+        guild_id = str(interaction.guild.id)
+        
+        if not interaction.guild.voice_client:
+            return await interaction.response.send_message("❌ I'm not connected to a voice channel.", ephemeral=True)
+        
+        # Clear queue and current song
+        self.song_queues.pop(guild_id, None)
+        self.current_songs.pop(guild_id, None)
+        
+        await interaction.guild.voice_client.disconnect()
+        await interaction.response.send_message("👋 Left the voice channel and cleared the queue.")
 
 async def setup(bot):
     await bot.add_cog(Music(bot))

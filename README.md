@@ -38,6 +38,7 @@ Queue up, skip, pause – we've got your playlist covered!
 | **/pause** | Pauses the current track. | `/pause` |
 | **/resume** | Resumes paused music. | `/resume` |
 | **/queue** | Shows the current queue. | `/queue` |
+| **/leave** | Disconnects the bot from voice channel. | `/leave` |
 
 ### 🔨 Moderation Commands
 Keep your server safe and sound – no drama allowed!
