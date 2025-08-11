@@ -10,6 +10,7 @@ from collections import deque
 import os
 import traceback
 import time
+import concurrent.futures
 
 
 # --- Helper Functions ---
@@ -17,10 +18,13 @@ import time
 def is_spotify_url(url):
     return 'open.spotify.com' in url
 
-def run_blocking_io(func, *args, **kwargs):
-    """Runs a blocking function in a separate thread to avoid blocking the event loop."""
+# Create a thread pool executor with limited threads for better resource management
+_executor = concurrent.futures.ThreadPoolExecutor(max_workers=4, thread_name_prefix="yt-dlp-worker")
+
+async def run_blocking_io(func, *args, **kwargs):
+    """Runs a blocking function in a separate thread pool to avoid blocking the event loop."""
     loop = asyncio.get_event_loop()
-    return loop.run_in_executor(None, func, *args, **kwargs)
+    return await loop.run_in_executor(_executor, func, *args, **kwargs)
 
 # --- Music Cog ---
 
@@ -33,6 +37,11 @@ class Music(commands.Cog):
         # Cache for search results: {query: {'data': song_info, 'timestamp': float}}
         self.search_cache = {}
         self.CACHE_TTL = 3600  # 1 hour in seconds
+    
+    def cog_unload(self):
+        """Clean up resources when the cog is unloaded."""
+        if _executor and not _executor._shutdown:
+            _executor.shutdown(wait=True)
 
     def setup_spotify(self):
         client_id = os.getenv("SPOTIFY_CLIENT_ID")
@@ -58,19 +67,50 @@ class Music(commands.Cog):
         if not queue:
             self.current_songs.pop(guild_id, None)
             if interaction.guild.voice_client:
-                await interaction.guild.voice_client.disconnect()
+                try:
+                    await interaction.guild.voice_client.disconnect()
+                except Exception as e:
+                    print(f"Error disconnecting voice client: {e}")
+            return
+
+        # Check if voice client is still valid
+        if not interaction.guild.voice_client or not interaction.guild.voice_client.is_connected():
+            print(f"Voice client disconnected for guild {guild_id}")
+            self.current_songs.pop(guild_id, None)
+            queue.clear()
             return
 
         song_info = queue.popleft()
         self.current_songs[guild_id] = song_info
 
         ffmpeg_options = {
-            'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-            'options': '-vn'
+            'before_options': (
+                '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 '
+                '-reconnect_at_eof 1 -reconnect_on_network_error 1 '
+                '-reconnect_on_http_error 4xx,5xx -http_persistent 1 '
+                '-multiple_requests 1 -seekable 0'
+            ),
+            'options': '-vn -b:a 128k -bufsize 1M -maxrate 128k -avoid_negative_ts make_zero'
         }
-        source = discord.FFmpegOpusAudio(song_info['url'], **ffmpeg_options)
+        try:
+            source = discord.FFmpegOpusAudio(song_info['url'], **ffmpeg_options)
+        except Exception as e:
+            print(f"Error creating audio source: {e}")
+            # Try next song if current one fails
+            await self.play_next_song(interaction)
+            return
         
-        interaction.guild.voice_client.play(source, after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next_song(interaction), self.bot.loop))
+        def after_playing(error):
+            if error:
+                print(f'Player error: {error}')
+            try:
+                coro = self.play_next_song(interaction)
+                future = asyncio.run_coroutine_threadsafe(coro, self.bot.loop)
+                future.result(timeout=60)  # Add timeout to prevent hanging
+            except Exception as e:
+                print(f"Error in after_playing callback: {e}")
+        
+        interaction.guild.voice_client.play(source, after=after_playing)
 
     # --- Music Search and Extraction ---
 
@@ -86,32 +126,75 @@ class Music(commands.Cog):
                 return cached_item['data']
 
         YDL_OPTS = {
-            'format': 'bestaudio/best',
+            'format': 'bestaudio[ext=webm]/bestaudio/best',
             'noplaylist': True,
-            'default_search': 'auto',
-            'source_address': '0.0.0.0',
+            'default_search': 'ytsearch',
             'quiet': True,
             'no_warnings': True,
             'skip_download': True,
-            'cookiefile': 'cookies.txt',
+            'extract_flat': False,
+            'writethumbnail': False,
+            'writeinfojson': False,
+            'ignoreerrors': True,
+            'logtostderr': False,
+            'geo_bypass': True,
+            'age_limit': None,
+            # SSL/TLS and connection fixes
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+            },
+            # Retry and timeout configurations
+            'retries': 3,
+            'fragment_retries': 3,
+            'socket_timeout': 30,
+            'sleep_interval': 1,
+            'max_sleep_interval': 5,
         }
+        
+        # Add cookie file only if it exists
+        if os.path.exists('cookies.txt'):
+            YDL_OPTS['cookiefile'] = 'cookies.txt'
         try:
             print(f"Cache miss. Searching online for: {query}")
             with yt_dlp.YoutubeDL(YDL_OPTS) as ydl:
                 info = await run_blocking_io(ydl.extract_info, query)
+                
+                if not info:
+                    print(f"No information found for query: {query}")
+                    return None
+                    
                 if 'entries' in info and info['entries']:
                     video_info = info['entries'][0]
                 else:
                     video_info = info
                 
-                song_data = {'url': video_info['url'], 'title': video_info['title']}
+                if not video_info or not video_info.get('url'):
+                    print(f"No valid URL found for query: {query}")
+                    return None
+                
+                song_data = {
+                    'url': video_info['url'], 
+                    'title': video_info.get('title', 'Unknown Title'),
+                    'duration': video_info.get('duration', 0),
+                    'uploader': video_info.get('uploader', 'Unknown')
+                }
                 
                 # Store in cache
                 self.search_cache[query] = {'data': song_data, 'timestamp': time.time()}
                 
                 return song_data
+        except yt_dlp.DownloadError as e:
+            print(f"YouTube-dlp download error: {e}")
+            return None
         except Exception as e:
-            print(f"Error with yt-dlp: {e}")
+            print(f"Unexpected error with yt-dlp: {e}")
+            traceback.print_exc()
             return None
 
     async def get_spotify_tracks(self, url):
@@ -143,10 +226,17 @@ class Music(commands.Cog):
             return await interaction.followup.send("You must be in a voice channel to play music.")
 
         voice_client = interaction.guild.voice_client
-        if not voice_client:
-            voice_client = await interaction.user.voice.channel.connect()
-        elif voice_client.channel != interaction.user.voice.channel:
-            await voice_client.move_to(interaction.user.voice.channel)
+        try:
+            if not voice_client:
+                voice_client = await interaction.user.voice.channel.connect(timeout=30.0, reconnect=True)
+            elif voice_client.channel != interaction.user.voice.channel:
+                await voice_client.move_to(interaction.user.voice.channel)
+        except asyncio.TimeoutError:
+            return await interaction.followup.send("Timed out while trying to connect to the voice channel.")
+        except discord.ClientException as e:
+            return await interaction.followup.send(f"Failed to connect to voice channel: {e}")
+        except Exception as e:
+            return await interaction.followup.send(f"Unexpected error connecting to voice: {e}")
 
         queue = self.get_queue(interaction.guild.id)
         

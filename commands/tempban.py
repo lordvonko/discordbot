@@ -3,7 +3,7 @@ from discord.ext import commands, tasks
 from discord import app_commands
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 TEMP_BANS_FILE = "tempbans.json"
 
@@ -58,7 +58,7 @@ class TempBan(commands.Cog):
         except ValueError as e:
             return await interaction.response.send_message(str(e), ephemeral=True)
 
-        unban_time = datetime.utcnow() + delta
+        unban_time = datetime.now(timezone.utc) + delta
         unban_timestamp = int(unban_time.timestamp())
 
         guild_id = str(interaction.guild.id)
@@ -86,7 +86,7 @@ class TempBan(commands.Cog):
 
     @tasks.loop(minutes=1)
     async def check_expired_bans(self):
-        now = int(datetime.utcnow().timestamp())
+        now = int(datetime.now(timezone.utc).timestamp())
         bans_to_remove = []
 
         for guild_id, users in self.temp_bans.items():
