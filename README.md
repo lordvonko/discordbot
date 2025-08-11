@@ -59,6 +59,14 @@ The fun extras that tie it all together.
 |---------|-------------|---------------|
 | **/announce** | Sends a message to a channel. | `/announce #news Hello world!` |
 | **/avatar** | Displays a user's avatar. | `/avatar @user` |
+| **/server** | Shows detailed server information. | `/server` |
+| **/poll** | Creates polls with multiple options. | `/poll "Question?" option1 option2` |
+| **/remindme** | Set personal reminders. | `/remindme 30m Take a break` |
+| **/music_stats** | Music usage statistics. | `/music_stats period:7d type:overview` |
+| **/ban_appeal** | Submit ban appeals (DM only). | `/ban_appeal 123456789 "My reason"` |
+| **/ban_list** | List servers where you're banned (DM only). | `/ban_list` |
+| **/ban_check** | Check ban status in specific server (DM only). | `/ban_check 123456789` |
+| **/clear_advanced** | Advanced message clearing. | `/clear_advanced user:@someone` |
 | **/help** | Lists all commands. | `/help` |
 | **/sync** | Syncs slash commands (owner only). | `/sync` |
 
