@@ -8,7 +8,7 @@ from typing import Optional
 import traceback
 
 # --- YTDL Configuration ---
-yt_dlp.utils.bug_reports_message = lambda: ''
+yt_dlp.utils.bug_reports_message = lambda *args, **kwargs: ''
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
@@ -26,7 +26,7 @@ ytdl_format_options = {
 
 ffmpeg_options = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-    'options': '-vn'
+    'options': '-vn -f s16le -ar 48000 -ac 2'
 }
 
 ytdl = yt_dlp.YoutubeDL(ytdl_format_options)
@@ -113,7 +113,23 @@ class GuildMusicState:
                     print(f'Player error: {error}')
                 self.loop.call_soon_threadsafe(self.play_next_song.set)
             
-            voice_client.play(self.current_song, after=lambda e: after_playing(e))
+            try:
+                voice_client.play(self.current_song, after=lambda e: after_playing(e))
+            except discord.opus.OpusNotLoaded:
+                # Fallback: Create basic FFmpeg audio source without PCMVolumeTransformer
+                try:
+                    if hasattr(self.current_song, 'source') and hasattr(self.current_song.source, 'source'):
+                        url = self.current_song.source.source
+                    else:
+                        # Get URL from data
+                        url = self.current_song.data.get('url')
+                    
+                    audio_source = discord.FFmpegPCMAudio(url, **ffmpeg_options)
+                    voice_client.play(audio_source, after=lambda e: after_playing(e))
+                    await interaction.channel.send("🔊 Playing without Opus (limited audio quality)")
+                except Exception as fallback_error:
+                    await interaction.channel.send(f"❌ Audio playback failed: {fallback_error}")
+                    return
             await self.play_next_song.wait()
 
 # --- Music Cog ---

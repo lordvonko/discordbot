@@ -10,6 +10,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Load Opus for voice support
+try:
+    discord.opus.load_opus('opus')
+except:
+    try:
+        discord.opus.load_opus('libopus.so.0')
+    except:
+        try:
+            discord.opus.load_opus('libopus-0.dll')
+        except:
+            print("Warning: Could not load Opus library. Voice features may not work.")
+
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
