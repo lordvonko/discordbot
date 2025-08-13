@@ -25,8 +25,8 @@ ytdl_format_options = {
 }
 
 ffmpeg_options = {
-    'options': '-vn',
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+    'options': '-vn'
 }
 
 ytdl = yt_dlp.YoutubeDL(ytdl_format_options)
@@ -44,7 +44,11 @@ class YTDLSource(discord.PCMVolumeTransformer):
     @classmethod
     async def from_url(cls, url, *, loop=None, stream=True):
         loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+        
+        def extract_info():
+            return ytdl.extract_info(url, download=not stream)
+            
+        data = await loop.run_in_executor(None, extract_info)
 
         if 'entries' in data:
             data = data['entries'][0]
@@ -56,7 +60,10 @@ class YTDLSource(discord.PCMVolumeTransformer):
     async def search(cls, query, *, loop=None):
         loop = loop or asyncio.get_event_loop()
         try:
-            data = await loop.run_in_executor(None, lambda: ytdl.extract_info(f"ytsearch:{query}", download=False))
+            def search_query():
+                return ytdl.extract_info(f"ytsearch:{query}", download=False)
+                
+            data = await loop.run_in_executor(None, search_query)
             if 'entries' in data and len(data['entries']) > 0:
                 return data['entries'][0]
         except Exception as e:
@@ -101,7 +108,12 @@ class GuildMusicState:
             
             await interaction.channel.send(embed=embed)
             
-            voice_client.play(self.current_song, after=lambda e: self.loop.call_soon_threadsafe(self.play_next_song.set))
+            def after_playing(error):
+                if error:
+                    print(f'Player error: {error}')
+                self.loop.call_soon_threadsafe(self.play_next_song.set)
+            
+            voice_client.play(self.current_song, after=lambda e: after_playing(e))
             await self.play_next_song.wait()
 
 # --- Music Cog ---
@@ -124,7 +136,10 @@ class Music(commands.Cog):
         state = self.get_music_state(interaction.guild.id)
 
         try:
-            playlist_info = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=False, process=False))
+            def extract_playlist():
+                return ytdl.extract_info(url, download=False, process=False)
+                
+            playlist_info = await loop.run_in_executor(None, extract_playlist)
             if 'entries' not in playlist_info or not playlist_info['entries']:
                 await interaction.followup.send("❌ Could not find any videos in that playlist.")
                 return
